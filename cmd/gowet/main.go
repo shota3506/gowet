@@ -19,7 +19,7 @@ func main() {
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	err := setup(fmt.Sprintf("%s:%s", redisHost, redisPort))
+	err := setup(redisHost, redisPort)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,9 +30,15 @@ func main() {
 	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
 }
 
-func setup(dbAddr string) error {
+func setup(redisHost, redisPort string) error {
+	// setup redis
 	var err error
-	db, err = redis.NewClient(dbAddr)
+	if redisHost == "fake" {
+		db = database.NewFakeClient()
+	} else {
+		db, err = redis.NewClient(fmt.Sprintf("%s:%s", redisHost, redisPort))
+	}
+
 	return err
 }
 
