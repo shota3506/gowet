@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/shota3506/gowet"
 	"github.com/shota3506/gowet/database"
 	"github.com/shota3506/gowet/database/redis"
+	"github.com/shota3506/gowet/gotools"
 )
 
 var db database.DB
@@ -44,21 +44,58 @@ func setup(redisHost, redisPort string) error {
 
 func handle(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	modulePath := r.URL.Path[1:]
+	path := r.URL.Path[1:]
 
-	res, err := db.Get(ctx, modulePath)
+	res, err := db.Get(ctx, path)
 	if err == nil {
-		fmt.Fprint(w, res)
+		fmt.Fprint(w, res) // return cached result
 		return
 	}
 
-	out, err := gowet.Run(ctx, modulePath)
+	workingDir, err := os.MkdirTemp("", "example")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer os.RemoveAll(workingDir)
+
+	// go mod init
+	err = gotools.GoModInit(workingDir)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = db.Set(ctx, modulePath, out.String())
+	// go get
+	err = gotools.GoGet(path, workingDir)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// go link
+	module, err := gotools.GoList(path, workingDir)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	pathVer := fmt.Sprintf("%s@%s", module.Path, module.Version)
+
+	res, err = db.Get(ctx, pathVer)
+	if err == nil {
+		fmt.Fprint(w, res) // return cached result
+		return
+	}
+
+	// go vet
+	out, err := gotools.GoVet(module.Dir)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = db.Set(ctx, pathVer, out.String())
 	if err != nil {
 		log.Printf("failed to cache result: %v", err)
 	}
