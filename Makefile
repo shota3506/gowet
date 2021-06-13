@@ -11,7 +11,7 @@ run:
 
 .PHONY: build
 build:
-	go build -o bin/gowet ./cmd/gowet
+	go build ./cmd/gowet
 
 .PHONY: test
 test:
