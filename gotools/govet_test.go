@@ -17,10 +17,10 @@ func TestGoVet(t *testing.T) {
 		err = GoGet(path, dir)
 		require.NoError(t, err)
 
-		resp, err := GoListDir(path, dir)
+		module, err := GoList(path, dir)
 		require.NoError(t, err)
 
-		out, err := GoVet(resp)
+		out, err := GoVet(module.Dir)
 		require.NoError(t, err)
 		require.NotNil(t, out)
 	})

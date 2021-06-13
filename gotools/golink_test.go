@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGoListDir(t *testing.T) {
+func TestGoList(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		path := "github.com/tenntenn/greeting"
 		dir := t.TempDir()
@@ -18,9 +18,9 @@ func TestGoListDir(t *testing.T) {
 		err = GoGet(path, dir)
 		require.NoError(t, err)
 
-		resp, err := GoListDir(path, dir)
+		resp, err := GoList(path, dir)
 		require.NoError(t, err)
-		assert.Contains(t, resp, path)
+		assert.Contains(t, resp.Dir, path)
 	})
 
 	t.Run("fail", func(t *testing.T) {
@@ -30,7 +30,7 @@ func TestGoListDir(t *testing.T) {
 		err := GoModInit(dir)
 		require.NoError(t, err)
 
-		_, err = GoListDir(path, dir)
+		_, err = GoList(path, dir)
 		require.Error(t, err)
 	})
 }

@@ -12,6 +12,8 @@ RUN make build
 # production image
 FROM golang:1.16.5-alpine
 
+RUN apk add build-base
+
 COPY --from=build-env /go/src/github.com/shota3506/gowet/gowet /gowet
 
 EXPOSE 8080
