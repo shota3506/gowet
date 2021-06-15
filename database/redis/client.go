@@ -19,10 +19,10 @@ type client struct {
 	c redis.Conn
 }
 
-func (r *client) Get(ctx context.Context, key string) (string, error) {
-	res, err := redis.String(r.c.Do("GET", key))
+func (r *client) Get(ctx context.Context, key string) ([]byte, error) {
+	res, err := redis.Bytes(r.c.Do("GET", key))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	return res, nil
 }
