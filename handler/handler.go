@@ -29,10 +29,10 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, res)
+	fmt.Fprint(w, string(res))
 }
 
-func (h *httpHandler) Run(ctx context.Context, path string) (string, error) {
+func (h *httpHandler) Run(ctx context.Context, path string) ([]byte, error) {
 	res, err := h.db.Get(ctx, path)
 	if err == nil {
 		return res, nil // return cached result
@@ -40,26 +40,26 @@ func (h *httpHandler) Run(ctx context.Context, path string) (string, error) {
 
 	workingDir, err := os.MkdirTemp("", "example")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer os.RemoveAll(workingDir)
 
 	// go mod init
 	err = gotools.GoModInit(workingDir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// go get
 	err = gotools.GoGet(path, workingDir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// go link
 	module, err := gotools.GoList(path, workingDir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	pathVer := fmt.Sprintf("%s@%s", module.Path, module.Version)
@@ -72,13 +72,13 @@ func (h *httpHandler) Run(ctx context.Context, path string) (string, error) {
 	// go vet
 	out, err := gotools.GoVet(module.Dir)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	err = h.db.Set(ctx, pathVer, out.String())
+	err = h.db.Set(ctx, pathVer, string(out))
 	if err != nil {
 		log.Printf("failed to cache result: %v", err)
 	}
 
-	return out.String(), nil
+	return out, nil
 }
