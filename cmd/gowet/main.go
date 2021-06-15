@@ -1,37 +1,63 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
+	"os/signal"
+	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/shota3506/gowet/database"
 	"github.com/shota3506/gowet/database/redis"
-	"github.com/shota3506/gowet/handler"
+	"github.com/shota3506/gowet/server"
 )
 
-var db database.DB
-
 func main() {
+	os.Exit(run(context.Background()))
+}
+
+func run(ctx context.Context) int {
 	// load environment variables
-	port := os.Getenv("PORT")
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
 
-	var db database.DB
+	termCh := make(chan os.Signal, 1)
+	signal.Notify(termCh, syscall.SIGTERM, syscall.SIGINT)
+
+	var d database.DB
 	var err error
 	if redisHost == "fake" {
-		db = database.NewFakeClient()
+		d = database.NewFakeClient()
 	} else {
-		db, err = redis.NewClient(fmt.Sprintf("%s:%s", redisHost, redisPort))
+		d, err = redis.NewClient(fmt.Sprintf("%s:%s", redisHost, redisPort))
 	}
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("failed to connect database: %v\n", err)
+		return 1
 	}
 
-	handler := handler.NewHTTPHandler(db)
-	mux := http.NewServeMux()
-	mux.Handle("/", handler)
-	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
+	s := server.NewServer(port, d)
+
+	errCh := make(chan error, 1)
+
+	go func() {
+		errCh <- s.Start()
+	}()
+
+	select {
+	case <-termCh:
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+		err := s.Stop(ctx)
+		if err != nil {
+			fmt.Printf("failed to gracefully shutdown %v\n", err)
+			return 1
+		}
+		return 0
+	case <-errCh:
+		return 1
+	}
 }

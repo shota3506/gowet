@@ -11,15 +11,15 @@ import (
 	"github.com/shota3506/gowet/gotools"
 )
 
-type httpHandler struct {
+type handler struct {
 	db database.DB
 }
 
-func NewHTTPHandler(db database.DB) *httpHandler {
-	return &httpHandler{db: db}
+func NewHandler(db database.DB) *handler {
+	return &handler{db: db}
 }
 
-func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	path := r.URL.Path[1:]
 
@@ -32,7 +32,7 @@ func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(res))
 }
 
-func (h *httpHandler) Run(ctx context.Context, path string) ([]byte, error) {
+func (h *handler) Run(ctx context.Context, path string) ([]byte, error) {
 	res, err := h.db.Get(ctx, path)
 	if err == nil {
 		return res, nil // return cached result

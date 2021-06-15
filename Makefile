@@ -1,6 +1,10 @@
 .PHONY: all
 all: vendor
 
+.PHONY: vet
+vet:
+	go vet ./...
+
 .PHONY: vendor
 vendor:
 	go mod vendor
