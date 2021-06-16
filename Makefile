@@ -19,5 +19,5 @@ build:
 
 .PHONY: test
 test:
-	go test -v -race -run ./...
+	go test -v -cover -race ./...
 
