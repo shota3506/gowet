@@ -1,6 +1,10 @@
 .PHONY: all
 all: vendor
 
+.PHONY: vet
+vet:
+	go vet ./...
+
 .PHONY: vendor
 vendor:
 	go mod vendor
@@ -15,5 +19,5 @@ build:
 
 .PHONY: test
 test:
-	go test -v -race -run ./...
+	go test -v -cover -race ./...
 
