@@ -53,7 +53,7 @@ func run(ctx context.Context) int {
 		defer cancel()
 		err := s.Stop(ctx)
 		if err != nil {
-			fmt.Printf("failed to gracefully shutdown %v\n", err)
+			fmt.Printf("failed to gracefully shutdown: %v\n", err)
 			return 1
 		}
 		return 0
