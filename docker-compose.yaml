@@ -16,5 +16,6 @@ services:
       - redis
     environment:
       - PORT=8080
+      - DATABASE_TYPE=redis
       - REDIS_HOST=redis
       - REDIS_PORT=6379
