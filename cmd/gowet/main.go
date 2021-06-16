@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/shota3506/gowet/database"
+	"github.com/shota3506/gowet/database/memory"
 	"github.com/shota3506/gowet/database/redis"
 	"github.com/shota3506/gowet/server"
 )
@@ -21,18 +22,24 @@ func main() {
 func run(ctx context.Context) int {
 	// load environment variables
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	databaseType := os.Getenv("DATABASE_TYPE")
 	redisHost := os.Getenv("REDIS_HOST")
-	redisPort := os.Getenv("REDIS_PORT")
+	redisPort, _ := strconv.Atoi(os.Getenv("REDIS_PORT"))
 
 	termCh := make(chan os.Signal, 1)
 	signal.Notify(termCh, syscall.SIGTERM, syscall.SIGINT)
 
 	var d database.DB
 	var err error
-	if redisHost == "fake" {
+	switch databaseType {
+	case "fake":
 		d = database.NewFakeClient()
-	} else {
-		d, err = redis.NewClient(fmt.Sprintf("%s:%s", redisHost, redisPort))
+	case "memory":
+		d = memory.NewClient()
+	case "redis":
+		d, err = redis.NewClient(redisHost, redisPort)
+	default:
+		err = fmt.Errorf("invalid database type: %s", databaseType)
 	}
 	if err != nil {
 		fmt.Printf("failed to connect database: %v\n", err)

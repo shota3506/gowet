@@ -2,21 +2,22 @@ package redis
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gomodule/redigo/redis"
 )
 
-func NewClient(addr string) (*client, error) {
-	c, err := redis.Dial("tcp", addr)
+type client struct {
+	c redis.Conn
+}
+
+func NewClient(host string, port int) (*client, error) {
+	c, err := redis.Dial("tcp", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
 		return nil, err
 	}
 
 	return &client{c: c}, nil
-}
-
-type client struct {
-	c redis.Conn
 }
 
 func (r *client) Get(ctx context.Context, key string) ([]byte, error) {
