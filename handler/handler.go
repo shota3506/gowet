@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -71,9 +70,9 @@ func (h *handler) handle(ctx context.Context, path, workingDir string) ([]byte, 
 		return nil, err
 	}
 
-	res, ok := marshalVet(res)
-	if !ok {
-		return nil, errors.New("failed to format vet output in JSON")
+	res, err = marshalVet(res)
+	if err != nil {
+		return nil, err
 	}
 
 	res, err = marshal(pathVer, res)
