@@ -11,17 +11,13 @@ var ErrNil = errors.New("redigo: nil returned")
 type memoryDB map[string]string
 
 // singleton pattern
-var md memoryDB
+var md memoryDB = memoryDB{}
 
 type client struct {
 	m *sync.RWMutex
 }
 
 func NewClient() *client {
-	if md == nil {
-		md = memoryDB{}
-	}
-
 	return &client{
 		m: &sync.RWMutex{},
 	}
