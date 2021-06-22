@@ -18,7 +18,7 @@ func TestMarshalVet(t *testing.T) {
 # github.com/example.com/example/example1
 {}
 `,
-				expected: "[]",
+				expected: "{}",
 			}, {
 				src: `# github.com/example.com/example
 # github.com/example.com/example/example1
@@ -33,18 +33,16 @@ func TestMarshalVet(t *testing.T) {
 	}
 }
 `,
-				expected: `[
-	{
-		"github.com/example.com/example/example1": {
-			"unreachable": [
-				{
-					"posn": "posn",
-					"message": "message"
-				}
-			]
-		}
+				expected: `{
+	"github.com/example.com/example/example1": {
+		"unreachable": [
+			{
+				"posn": "posn",
+				"message": "message"
+			}
+		]
 	}
-]`,
+}`,
 			}, {
 				src: `# github.com/example.com/example
 # github.com/example.com/example/example1
@@ -72,34 +70,30 @@ func TestMarshalVet(t *testing.T) {
 	}
 }
 `,
-				expected: `[
-	{
-		"github.com/example.com/example/example2": {
-			"unreachable": [
-				{
-					"posn": "posn",
-					"message": "message"
-				}
-			]
-		}
+				expected: `{
+	"github.com/example.com/example/example2": {
+		"unreachable": [
+			{
+				"posn": "posn",
+				"message": "message"
+			}
+		]
 	},
-	{
-		"github.com/example.com/example/example3": {
-			"unreachable": [
-				{
-					"posn": "posn",
-					"message": "message"
-				}
-			]
-		}
+	"github.com/example.com/example/example3": {
+		"unreachable": [
+			{
+				"posn": "posn",
+				"message": "message"
+			}
+		]
 	}
-]`,
+}`,
 			},
 		}
 
 		for _, testcase := range testcases {
-			actual, ok := marshalVet([]byte(testcase.src))
-			require.True(t, ok)
+			actual, err := marshalVet([]byte(testcase.src))
+			require.NoError(t, err)
 			assert.Equal(t, testcase.expected, string(actual))
 		}
 	})
@@ -107,17 +101,11 @@ func TestMarshalVet(t *testing.T) {
 	t.Run("fail", func(t *testing.T) {
 		testcases := []string{
 			`{`,
-			`# github.com/example.com/example
-{
-{
-}
-}
-`,
 		}
 
 		for _, testcase := range testcases {
-			_, ok := marshalVet([]byte(testcase))
-			require.False(t, ok)
+			_, err := marshalVet([]byte(testcase))
+			require.Error(t, err)
 		}
 	})
 }
