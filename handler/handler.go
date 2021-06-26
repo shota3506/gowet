@@ -41,7 +41,17 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.handle(ctx, path, workingDir)
 	if err != nil {
-		render(w, marshalError(err), http.StatusInternalServerError)
+		var statusCode int
+		if IsBadRequestError(err) {
+			statusCode = http.StatusBadRequest
+		} else if IsInternalServerError(err) {
+			statusCode = http.StatusInternalServerError
+		} else {
+			log.Println(err) // unexpected error
+			statusCode = http.StatusInternalServerError
+		}
+
+		render(w, marshalError(err), statusCode)
 		return
 	}
 
@@ -51,7 +61,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *handler) handle(ctx context.Context, path, workingDir string) ([]byte, error) {
 	res, err := h.db.Get(ctx, path)
 	if err == nil {
-		return nil, err
+		return res, nil
+	}
+	if !database.IsNotFoundError(err) {
+		return nil, NewInternalServerError(err)
 	}
 
 	module, err := h.getModule(ctx, path, workingDir)
@@ -64,20 +77,23 @@ func (h *handler) handle(ctx context.Context, path, workingDir string) ([]byte, 
 	if err == nil {
 		return res, nil
 	}
+	if !database.IsNotFoundError(err) {
+		return nil, NewInternalServerError(err)
+	}
 
 	res, err = gotools.GoVet(module.Dir)
 	if err != nil {
-		return nil, err
+		return nil, NewBadRequestError(err)
 	}
 
 	res, err = marshalVet(res)
 	if err != nil {
-		return nil, err
+		return nil, NewInternalServerError(err)
 	}
 
 	res, err = marshal(pathVer, res)
 	if err != nil {
-		return nil, err
+		return nil, NewInternalServerError(err)
 	}
 
 	err = h.db.Set(ctx, pathVer, string(res))
@@ -92,19 +108,19 @@ func (h *handler) getModule(ctx context.Context, path string, workingDir string)
 	// go mod init
 	err := gotools.GoModInit(workingDir)
 	if err != nil {
-		return nil, err
+		return nil, NewInternalServerError(err)
 	}
 
 	// go get
 	err = gotools.GoGet(path, workingDir)
 	if err != nil {
-		return nil, err
+		return nil, NewBadRequestError(err)
 	}
 
 	// go link
 	module, err := gotools.GoList(path, workingDir)
 	if err != nil {
-		return nil, err
+		return nil, NewBadRequestError(err)
 	}
 
 	return module, nil
