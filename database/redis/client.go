@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/shota3506/gowet/database"
 )
 
 type client struct {
@@ -23,6 +24,9 @@ func NewClient(host string, port int) (*client, error) {
 func (r *client) Get(ctx context.Context, key string) ([]byte, error) {
 	res, err := redis.Bytes(r.c.Do("GET", key))
 	if err != nil {
+		if err == redis.ErrNil {
+			return nil, database.NewNotFoundError(err)
+		}
 		return nil, err
 	}
 	return res, nil
