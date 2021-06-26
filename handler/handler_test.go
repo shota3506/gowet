@@ -36,6 +36,6 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 		h.ServeHTTP(recorder, req)
 
-		assert.NotEqual(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 	})
 }

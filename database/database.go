@@ -19,12 +19,12 @@ func NewNotFoundError(err error) error {
 	return &NotFoundError{err: err}
 }
 
-func (err *NotFoundError) Error() string {
-	return err.err.Error()
+func (e *NotFoundError) Error() string {
+	return e.err.Error()
 }
 
-func (err *NotFoundError) Unwrap() error {
-	return err.err
+func (e *NotFoundError) Unwrap() error {
+	return e.err
 }
 
 func IsNotFoundError(err error) bool {
