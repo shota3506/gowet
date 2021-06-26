@@ -1,3 +1,4 @@
+//go:generate mockgen -package=$GOPACKAGE -destination=mock_$GOFILE . DB
 package database
 
 import (
