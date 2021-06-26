@@ -39,12 +39,14 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer os.RemoveAll(workingDir)
 
+	log.Printf("handle request %s\n", path)
 	res, err := h.handle(ctx, path, workingDir)
 	if err != nil {
 		var statusCode int
 		if IsBadRequestError(err) {
 			statusCode = http.StatusBadRequest
 		} else if IsInternalServerError(err) {
+			log.Println(err)
 			statusCode = http.StatusInternalServerError
 		} else {
 			log.Println(err) // unexpected error

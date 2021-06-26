@@ -15,7 +15,7 @@ func GoVet(dir string) ([]byte, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run '%v': %w", cmd, err)
+		return nil, fmt.Errorf("failed to run 'go vet': %w", err)
 	}
 
 	return out.Bytes(), nil
