@@ -5,14 +5,6 @@ all: vendor
 vet:
 	go vet ./...
 
-.PHONY: vendor
-vendor:
-	go mod vendor
-
-.PHONY: run
-run:
-	go run ./cmd/gowet
-
 .PHONY: build
 build:
 	go build ./cmd/gowet
@@ -20,4 +12,8 @@ build:
 .PHONY: test
 test:
 	go test -v -cover -race ./...
+
+.PHONY: run
+run:
+	go run ./cmd/gowet
 

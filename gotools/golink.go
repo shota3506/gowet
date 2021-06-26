@@ -37,7 +37,7 @@ func GoList(path, dir string) (*Module, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return nil, fmt.Errorf("failed to run '%v': %w", cmd, err)
+		return nil, fmt.Errorf("failed to run 'go list %s': %w", path, err)
 	}
 
 	var resp Module

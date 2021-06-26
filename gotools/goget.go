@@ -11,7 +11,7 @@ func GoGet(path, dir string) error {
 
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("failed to run '%v': %w", cmd, err)
+		return fmt.Errorf("failed to run 'go get %s': %w", path, err)
 	}
 
 	return nil
